@@ -2,15 +2,20 @@ import json
 
 
 class Settings(dict):
+    BINS = "Bins (Histogram)"
+    BW_FACTOR = "Band-width factor (KDE plots)"
+    CONFIDENCE_INTERVAL = "Confidence interval (Regression)"
+    POLYNOMIAL_DEGREE = "Polynomial degree"
+
     def __init__(self):
         super().__init__()
         self.define_defaults()
 
     def define_defaults(self):
-        self["bins"] = "auto"
-        self["band-width factor"] = 1
-        self["confidence interval"] = 95
-        self["polynomial degree"] = 2
+        self[self.BINS] = "auto"
+        self[self.BW_FACTOR] = 1
+        self[self.CONFIDENCE_INTERVAL] = 95
+        self[self.POLYNOMIAL_DEGREE] = 2
 
     def reload(self, path="settings.json"):
         try:

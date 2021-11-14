@@ -197,7 +197,7 @@ class Visualizer(Tk):
                 x=x_label,
                 hue=classes,
                 ax=plot,
-                bins=self.settings_panel.get("bins"),
+                bins=self.settings_panel.get(Settings.BINS),
             )
         elif plot_type == PlotType.KDE_UNIVARIATE:
             sns.kdeplot(
@@ -206,7 +206,7 @@ class Visualizer(Tk):
                 hue=classes,
                 common_norm=False,
                 ax=plot,
-                bw_adjust=self.settings_panel.get("band-width factor"),
+                bw_adjust=self.settings_panel.get(Settings.BW_FACTOR),
             )
         elif plot_type == PlotType.KDE_BIVARIATE:
             sns.kdeplot(
@@ -217,7 +217,7 @@ class Visualizer(Tk):
                 ax=plot,
                 common_norm=False,
                 fill=True,
-                bw_adjust=self.settings_panel.get("band-width factor"),
+                bw_adjust=self.settings_panel.get(Settings.BW_FACTOR),
             )
         elif plot_type == PlotType.LINEAR_REGRESSION:
             if classes:
@@ -241,8 +241,8 @@ class Visualizer(Tk):
                         data=self.df[self.df[classes] == column_value],
                         ax=plot,
                         label=column_value,
-                        order=self.settings_panel.get("polynomial degree"),
-                        ci=self.settings_panel.get("confidence interval"),
+                        order=self.settings_panel.get(Settings.POLYNOMIAL_DEGREE),
+                        ci=self.settings_panel.get(Settings.CONFIDENCE_INTERVAL),
                     )
                     plot.legend(title=classes)
             else:
@@ -251,8 +251,8 @@ class Visualizer(Tk):
                     y=y_label,
                     data=self.df,
                     ax=plot,
-                    order=self.settings_panel.get("polynomial degree"),
-                    ci=self.settings_panel.get("confidence interval"),
+                    order=self.settings_panel.get(Settings.POLYNOMIAL_DEGREE),
+                    ci=self.settings_panel.get(Settings.CONFIDENCE_INTERVAL),
                 )
 
         plot.set_title(self.csv)
