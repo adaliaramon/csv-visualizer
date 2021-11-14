@@ -17,7 +17,8 @@ class Settings(dict):
             with open(path, "r") as f:
                 data: dict = json.load(f)
                 for key, value in data.items():
-                    self[key] = value
+                    if key in self:
+                        self[key] = value
         except FileNotFoundError:
             pass
 

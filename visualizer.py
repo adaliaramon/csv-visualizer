@@ -14,6 +14,7 @@ from ttkthemes import ThemedStyle
 from fancybox import Fancybox
 from plot_types import PlotType
 from settings import Settings
+from settings_panel import SettingsPanel
 
 
 class Visualizer(Tk):
@@ -28,6 +29,7 @@ class Visualizer(Tk):
         super().__init__()
         self.csv = csv
         self.settings = None
+        self.settings_panel = None
         self.load_settings()
         self.wm_title(self.TITLE)
         self.style = ThemedStyle(theme="breeze")
@@ -35,33 +37,33 @@ class Visualizer(Tk):
         self.x_axis = Fancybox(self)
         self.y_axis = Fancybox(self)
         self.classes = Fancybox(self)
-        self.scatter_plot_button = Button(self, text="Scatter plot", command=self.plot)
+        self.scatter_plot_button = Button(self, text="Scatter plot (Alt+S)", command=self.plot)
         self.line_plot_button = Button(
             self, text="Line plot", command=lambda: self.plot(plot_type=PlotType.LINE)
         )
         self.histogram_button = Button(
             self,
-            text="Histogram",
+            text="Histogram (Alt+H)",
             command=lambda: self.plot(plot_type=PlotType.HISTOGRAM),
         )
         self.univariate_kde_button = Button(
             self,
-            text="Univariate KDE",
+            text="Univariate KDE (Alt+U)",
             command=lambda: self.plot(plot_type=PlotType.KDE_UNIVARIATE),
         )
         self.bivariate_kde_button = Button(
             self,
-            text="Bivariate KDE",
+            text="Bivariate KDE (Alt+B)",
             command=lambda: self.plot(plot_type=PlotType.KDE_BIVARIATE),
         )
         self.linear_regression_button = Button(
             self,
-            text="Linear regression plot",
+            text="Linear regression plot (Alt+L)",
             command=lambda: self.plot(plot_type=PlotType.LINEAR_REGRESSION),
         )
         self.quadratic_regression_button = Button(
             self,
-            text="Polynomial regression plot",
+            text="Polynomial regression plot (Alt+P)",
             command=lambda: self.plot(plot_type=PlotType.POLYNOMIAL_REGRESSION),
         )
         self.canvas = FigureCanvasTkAgg(Figure(), self)
@@ -74,8 +76,11 @@ class Visualizer(Tk):
             return
         if not self.settings:
             self.settings = Settings()
+        if not self.settings_panel:
+            self.settings_panel = SettingsPanel(self, self.settings)
         try:
             self.settings.reload(path)
+            self.settings_panel.add_fields()
         except JSONDecodeError:
             showerror("Error", "Invalid settings file: " + path)
             return
@@ -113,16 +118,26 @@ class Visualizer(Tk):
         file_menu.add_command(label="Exit", command=self.quit)
 
         settings_menu.add_command(label="Save", command=self.save_settings)
-        settings_menu.add_command(label="Load", command=lambda: self.load_settings(None, True))
-        settings_menu.add_command(label="Reset defaults", command=self.settings.define_defaults)
+        settings_menu.add_command(
+            label="Load", command=lambda: self.load_settings(None, True)
+        )
+        settings_menu.add_command(
+            label="Reset defaults", command=self.reset_settings
+        )
 
         menu.add_cascade(label="File", menu=file_menu)
         menu.add_cascade(label="Settings", menu=settings_menu)
 
         self.config(menu=menu)
 
+    def reset_settings(self):
+        self.settings.define_defaults()
+        self.settings_panel.add_fields()
+
     def save_settings(self):
         path = fd.asksaveasfilename(initialfile="settings.json")
+        for key in self.settings:
+            self.settings[key] = self.settings_panel.get(key)
         self.settings.save(path)
         showinfo(self.TITLE, "Settings saved")
 
@@ -142,7 +157,10 @@ class Visualizer(Tk):
         self.quadratic_regression_button.grid(row=0, column=9, padx=5, pady=5)
         self.canvas.figure.add_subplot(111)
         self.canvas.draw()
-        self.canvas.get_tk_widget().grid(row=1, column=0, columnspan=10, sticky=NSEW)
+        self.settings_panel.grid(row=1, column=0, padx=5, pady=5, sticky=NSEW)
+        self.canvas.get_tk_widget().grid(
+            row=1, column=1, columnspan=9, padx=5, pady=5, sticky=NSEW
+        )
 
     def plot(self, plot_type=PlotType.SCATTER):
         x_label = self.x_axis.get()
@@ -175,7 +193,11 @@ class Visualizer(Tk):
             sns.scatterplot(x=x_label, y=y_label, data=self.df, hue=classes, ax=plot)
         elif plot_type == PlotType.HISTOGRAM:
             sns.histplot(
-                self.df, x=x_label, hue=classes, ax=plot, bins=self.settings["bins"]
+                self.df,
+                x=x_label,
+                hue=classes,
+                ax=plot,
+                bins=self.settings_panel.get("bins"),
             )
         elif plot_type == PlotType.KDE_UNIVARIATE:
             sns.kdeplot(
@@ -184,7 +206,7 @@ class Visualizer(Tk):
                 hue=classes,
                 common_norm=False,
                 ax=plot,
-                bw_adjust=self.settings["band-width factor"],
+                bw_adjust=self.settings_panel.get("band-width factor"),
             )
         elif plot_type == PlotType.KDE_BIVARIATE:
             sns.kdeplot(
@@ -195,6 +217,7 @@ class Visualizer(Tk):
                 ax=plot,
                 common_norm=False,
                 fill=True,
+                bw_adjust=self.settings_panel.get("band-width factor"),
             )
         elif plot_type == PlotType.LINEAR_REGRESSION:
             if classes:
@@ -218,7 +241,8 @@ class Visualizer(Tk):
                         data=self.df[self.df[classes] == column_value],
                         ax=plot,
                         label=column_value,
-                        order=self.settings["polynomial degree"],
+                        order=self.settings_panel.get("polynomial degree"),
+                        ci=self.settings_panel.get("confidence interval"),
                     )
                     plot.legend(title=classes)
             else:
@@ -227,8 +251,8 @@ class Visualizer(Tk):
                     y=y_label,
                     data=self.df,
                     ax=plot,
-                    order=2,
-                    ci=self.settings["confidence interval"],
+                    order=self.settings_panel.get("polynomial degree"),
+                    ci=self.settings_panel.get("confidence interval"),
                 )
 
         plot.set_title(self.csv)
