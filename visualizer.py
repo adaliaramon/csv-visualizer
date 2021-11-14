@@ -63,17 +63,17 @@ class Visualizer(Tk):
         self.load_csv(csv)
 
     def set_bindings(self):
-        self.bind("<Control-o>", lambda event: self.choose_csv())
-        self.bind("<Control-s>", lambda event: self.plot(PlotType.SCATTER))
-        self.bind("<Control-l>", lambda event: self.plot(PlotType.LINE))
-        self.bind("<Control-h>", lambda event: self.plot(PlotType.HISTOGRAM))
-        self.bind("<Control-u>", lambda event: self.plot(PlotType.KDE_UNIVARIATE))
-        self.bind("<Control-b>", lambda event: self.plot(PlotType.KDE_BIVARIATE))
-        self.bind("<Control-l>", lambda event: self.plot(PlotType.LINEAR_REGRESSION))
-        self.bind("<Control-q>", lambda event: self.plot(PlotType.QUADRATIC_REGRESSION))
-        self.bind("<Control-x>", lambda event: self.x_axis.focus_set())
-        self.bind("<Control-y>", lambda event: self.y_axis.focus_set())
-        self.bind("<Control-c>", lambda event: self.classes.focus_set())
+        self.bind("<Alt-o>", lambda event: self.choose_csv())
+        self.bind("<Alt-s>", lambda event: self.plot(PlotType.SCATTER))
+        self.bind("<Alt-l>", lambda event: self.plot(PlotType.LINE))
+        self.bind("<Alt-h>", lambda event: self.plot(PlotType.HISTOGRAM))
+        self.bind("<Alt-u>", lambda event: self.plot(PlotType.KDE_UNIVARIATE))
+        self.bind("<Alt-b>", lambda event: self.plot(PlotType.KDE_BIVARIATE))
+        self.bind("<Alt-l>", lambda event: self.plot(PlotType.LINEAR_REGRESSION))
+        self.bind("<Alt-q>", lambda event: self.plot(PlotType.QUADRATIC_REGRESSION))
+        self.bind("<Alt-x>", lambda event: self.x_axis.focus_set())
+        self.bind("<Alt-y>", lambda event: self.y_axis.focus_set())
+        self.bind("<Alt-c>", lambda event: self.classes.focus_set())
 
     def run(self):
         self.set_bindings()
@@ -140,9 +140,32 @@ class Visualizer(Tk):
                 fill=True,
             )
         elif plot_type == PlotType.LINEAR_REGRESSION:
-            sns.regplot(x=x_label, y=y_label, data=self.df, ax=plot)
+            if classes:
+                for column_value in self.df[classes].unique():
+                    sns.regplot(
+                        x=x_label,
+                        y=y_label,
+                        data=self.df[self.df[classes] == column_value],
+                        ax=plot,
+                        label=column_value,
+                    )
+                    plot.legend(title=classes)
+            else:
+                sns.regplot(x=x_label, y=y_label, data=self.df, ax=plot)
         elif plot_type == PlotType.QUADRATIC_REGRESSION:
-            sns.regplot(x=x_label, y=y_label, data=self.df, ax=plot, order=2)
+            if classes:
+                for column_value in self.df[classes].unique():
+                    sns.regplot(
+                        x=x_label,
+                        y=y_label,
+                        data=self.df[self.df[classes] == column_value],
+                        ax=plot,
+                        label=column_value,
+                        order=2,
+                    )
+                    plot.legend(title=classes)
+            else:
+                sns.regplot(x=x_label, y=y_label, data=self.df, ax=plot, order=2)
 
         self.canvas.draw()
 
