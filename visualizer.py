@@ -204,7 +204,7 @@ class Visualizer(Tk):
                 x=x_label,
                 data=self.df,
                 hue=classes,
-                common_norm=False,
+                common_norm=self.settings_panel.get(Settings.COMMON_NORMALIZATION),
                 ax=plot,
                 bw_adjust=self.settings_panel.get(Settings.BW_FACTOR),
             )
@@ -215,7 +215,7 @@ class Visualizer(Tk):
                 hue=classes,
                 data=self.df,
                 ax=plot,
-                common_norm=False,
+                common_norm=self.settings_panel.get(Settings.COMMON_NORMALIZATION),
                 fill=True,
                 bw_adjust=self.settings_panel.get(Settings.BW_FACTOR),
             )

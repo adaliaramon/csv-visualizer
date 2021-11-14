@@ -4,6 +4,7 @@ import json
 class Settings(dict):
     BINS = "Bins (Histogram)"
     BW_FACTOR = "Band-width factor (KDE plots)"
+    COMMON_NORMALIZATION = "Common normalization (Histogram & KDE)"
     CONFIDENCE_INTERVAL = "Confidence interval (Regression)"
     POLYNOMIAL_DEGREE = "Polynomial degree"
 
@@ -14,6 +15,7 @@ class Settings(dict):
     def define_defaults(self):
         self[self.BINS] = "auto"
         self[self.BW_FACTOR] = 1
+        self[self.COMMON_NORMALIZATION] = False
         self[self.CONFIDENCE_INTERVAL] = 95
         self[self.POLYNOMIAL_DEGREE] = 2
 
