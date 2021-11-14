@@ -1,4 +1,5 @@
 from json import JSONDecodeError
+from numbers import Number
 from tkinter import Tk, NSEW, Menu
 from tkinter import filedialog as fd
 from tkinter.messagebox import showerror, showinfo
@@ -37,34 +38,34 @@ class Visualizer(Tk):
         self.x_axis = Fancybox(self)
         self.y_axis = Fancybox(self)
         self.classes = Fancybox(self)
-        self.scatter_plot_button = Button(self, text="Scatter plot (Alt+S)", command=self.plot)
+        self.scatter_plot_button = Button(self, text="Scatter plot (Alt+S)", command=self.try_to_plot)
         self.line_plot_button = Button(
-            self, text="Line plot", command=lambda: self.plot(plot_type=PlotType.LINE)
+            self, text="Line plot", command=lambda: self.try_to_plot(plot_type=PlotType.LINE)
         )
         self.histogram_button = Button(
             self,
             text="Histogram (Alt+H)",
-            command=lambda: self.plot(plot_type=PlotType.HISTOGRAM),
+            command=lambda: self.try_to_plot(plot_type=PlotType.HISTOGRAM),
         )
         self.univariate_kde_button = Button(
             self,
             text="Univariate KDE (Alt+U)",
-            command=lambda: self.plot(plot_type=PlotType.KDE_UNIVARIATE),
+            command=lambda: self.try_to_plot(plot_type=PlotType.KDE_UNIVARIATE),
         )
         self.bivariate_kde_button = Button(
             self,
             text="Bivariate KDE (Alt+B)",
-            command=lambda: self.plot(plot_type=PlotType.KDE_BIVARIATE),
+            command=lambda: self.try_to_plot(plot_type=PlotType.KDE_BIVARIATE),
         )
         self.linear_regression_button = Button(
             self,
             text="Linear regression plot (Alt+L)",
-            command=lambda: self.plot(plot_type=PlotType.LINEAR_REGRESSION),
+            command=lambda: self.try_to_plot(plot_type=PlotType.LINEAR_REGRESSION),
         )
         self.quadratic_regression_button = Button(
             self,
             text="Polynomial regression plot (Alt+P)",
-            command=lambda: self.plot(plot_type=PlotType.POLYNOMIAL_REGRESSION),
+            command=lambda: self.try_to_plot(plot_type=PlotType.POLYNOMIAL_REGRESSION),
         )
         self.canvas = FigureCanvasTkAgg(Figure(), self)
         self.load_csv(csv)
@@ -91,13 +92,13 @@ class Visualizer(Tk):
         self.bind("<Control-o>", lambda event: self.choose_csv())
         self.bind("<Control-s>", lambda event: self.save())
         self.bind("<Control-S>", lambda event: self.edit_settings())
-        self.bind("<Alt-s>", lambda event: self.plot(PlotType.SCATTER))
-        self.bind("<Alt-l>", lambda event: self.plot(PlotType.LINE))
-        self.bind("<Alt-h>", lambda event: self.plot(PlotType.HISTOGRAM))
-        self.bind("<Alt-u>", lambda event: self.plot(PlotType.KDE_UNIVARIATE))
-        self.bind("<Alt-b>", lambda event: self.plot(PlotType.KDE_BIVARIATE))
-        self.bind("<Alt-l>", lambda event: self.plot(PlotType.LINEAR_REGRESSION))
-        self.bind("<Alt-p>", lambda event: self.plot(PlotType.POLYNOMIAL_REGRESSION))
+        self.bind("<Alt-s>", lambda event: self.try_to_plot(PlotType.SCATTER))
+        self.bind("<Alt-l>", lambda event: self.try_to_plot(PlotType.LINE))
+        self.bind("<Alt-h>", lambda event: self.try_to_plot(PlotType.HISTOGRAM))
+        self.bind("<Alt-u>", lambda event: self.try_to_plot(PlotType.KDE_UNIVARIATE))
+        self.bind("<Alt-b>", lambda event: self.try_to_plot(PlotType.KDE_BIVARIATE))
+        self.bind("<Alt-l>", lambda event: self.try_to_plot(PlotType.LINEAR_REGRESSION))
+        self.bind("<Alt-p>", lambda event: self.try_to_plot(PlotType.POLYNOMIAL_REGRESSION))
         self.bind("<Alt-x>", lambda event: self.x_axis.focus_set())
         self.bind("<Alt-y>", lambda event: self.y_axis.focus_set())
         self.bind("<Alt-c>", lambda event: self.classes.focus_set())
@@ -162,6 +163,13 @@ class Visualizer(Tk):
             row=1, column=1, columnspan=9, padx=5, pady=5, sticky=NSEW
         )
 
+    def try_to_plot(self, plot_type=PlotType.SCATTER):
+        try:
+            self.plot(plot_type)
+        except Exception as e:
+            showerror("Error", str(e))
+            raise
+
     def plot(self, plot_type=PlotType.SCATTER):
         x_label = self.x_axis.get()
         if not x_label:
@@ -200,13 +208,16 @@ class Visualizer(Tk):
                 bins=self.settings_panel.get(Settings.BINS),
             )
         elif plot_type == PlotType.KDE_UNIVARIATE:
+            bw_adjust = self.settings_panel.get(Settings.BW_FACTOR)
+            if not isinstance(bw_adjust, Number):
+                raise ValueError(Settings.BW_FACTOR + " must be a number")
             sns.kdeplot(
                 x=x_label,
                 data=self.df,
                 hue=classes,
                 common_norm=self.settings_panel.get(Settings.COMMON_NORMALIZATION),
                 ax=plot,
-                bw_adjust=self.settings_panel.get(Settings.BW_FACTOR),
+                bw_adjust=bw_adjust,
             )
         elif plot_type == PlotType.KDE_BIVARIATE:
             sns.kdeplot(

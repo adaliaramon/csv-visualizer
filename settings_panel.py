@@ -32,4 +32,8 @@ class SettingsPanel(Frame):
         value = value.strip()
         if value.isdigit():
             return int(value)
+        try:
+            return float(value)
+        except ValueError:
+            pass
         return value
