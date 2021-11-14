@@ -15,10 +15,11 @@ from plot_types import PlotType
 
 
 class Visualizer(Tk):
-    FILETYPES = [
+    CSV_FILETYPES = [
         ("Comma-separated values", "*.csv"),
         ("Tab-separated values", "*.tsv"),
     ]
+    IMAGE_FILETYPES = ["png", "pdf", "jpg", "jpeg", "svg", "eps"]
 
     def __init__(self, csv: str):
         super().__init__()
@@ -27,6 +28,7 @@ class Visualizer(Tk):
         self.style = ThemedStyle(theme="breeze")
         self.df: Optional[pd.DataFrame] = None
         self.open_button = Button(self, text="Open", command=self.choose_csv)
+        self.save_button = Button(self, text="Save", command=self.save)
         self.x_axis = Fancybox(self)
         self.y_axis = Fancybox(self)
         self.classes = Fancybox(self)
@@ -63,7 +65,8 @@ class Visualizer(Tk):
         self.load_csv(csv)
 
     def set_bindings(self):
-        self.bind("<Alt-o>", lambda event: self.choose_csv())
+        self.bind("<Control-o>", lambda event: self.choose_csv())
+        self.bind("<Control-s>", lambda event: self.save())
         self.bind("<Alt-s>", lambda event: self.plot(PlotType.SCATTER))
         self.bind("<Alt-l>", lambda event: self.plot(PlotType.LINE))
         self.bind("<Alt-h>", lambda event: self.plot(PlotType.HISTOGRAM))
@@ -81,22 +84,23 @@ class Visualizer(Tk):
         self.mainloop()
 
     def draw(self):
-        self.columnconfigure(index=(1, 2, 3), weight=1)
+        self.columnconfigure(index=(2, 3, 4), weight=1)
         self.rowconfigure(index=(1,), weight=1)
         self.open_button.grid(row=0, column=0, padx=5, pady=5)
-        self.x_axis.grid(row=0, column=1, padx=5, pady=5, sticky=NSEW)
-        self.y_axis.grid(row=0, column=2, padx=5, pady=5, sticky=NSEW)
-        self.classes.grid(row=0, column=3, padx=5, pady=5, sticky=NSEW)
-        self.scatter_plot_button.grid(row=0, column=4, padx=5, pady=5)
-        self.line_plot_button.grid(row=0, column=5, padx=5, pady=5)
-        self.histogram_button.grid(row=0, column=6, padx=5, pady=5)
-        self.univariate_kde_button.grid(row=0, column=7, padx=5, pady=5)
-        self.bivariate_kde_button.grid(row=0, column=8, padx=5, pady=5)
-        self.linear_regression_button.grid(row=0, column=9, padx=5, pady=5)
-        self.quadratic_regression_button.grid(row=0, column=10, padx=5, pady=5)
+        self.save_button.grid(row=0, column=1, padx=5, pady=5)
+        self.x_axis.grid(row=0, column=2, padx=5, pady=5, sticky=NSEW)
+        self.y_axis.grid(row=0, column=3, padx=5, pady=5, sticky=NSEW)
+        self.classes.grid(row=0, column=4, padx=5, pady=5, sticky=NSEW)
+        self.scatter_plot_button.grid(row=0, column=5, padx=5, pady=5)
+        self.line_plot_button.grid(row=0, column=6, padx=5, pady=5)
+        self.histogram_button.grid(row=0, column=7, padx=5, pady=5)
+        self.univariate_kde_button.grid(row=0, column=8, padx=5, pady=5)
+        self.bivariate_kde_button.grid(row=0, column=9, padx=5, pady=5)
+        self.linear_regression_button.grid(row=0, column=10, padx=5, pady=5)
+        self.quadratic_regression_button.grid(row=0, column=11, padx=5, pady=5)
         self.canvas.figure.add_subplot(111)
         self.canvas.draw()
-        self.canvas.get_tk_widget().grid(row=1, column=0, columnspan=11, sticky=NSEW)
+        self.canvas.get_tk_widget().grid(row=1, column=0, columnspan=12, sticky=NSEW)
 
     def plot(self, plot_type=PlotType.SCATTER):
         x_label = self.x_axis.get()
@@ -169,8 +173,23 @@ class Visualizer(Tk):
 
         self.canvas.draw()
 
+    def save(self):
+        image: str = fd.asksaveasfilename()
+        if not image:
+            return
+        for extension in self.IMAGE_FILETYPES:
+            if image.endswith(extension):
+                break
+        else:
+            showerror(
+                "Error",
+                f"Output file does not have a valid extension. "
+                f"Possible options are: {', '.join(self.IMAGE_FILETYPES)}.",
+            )
+        self.canvas.figure.savefig(image)
+
     def choose_csv(self):
-        csv = fd.askopenfilename(filetypes=self.FILETYPES)
+        csv = fd.askopenfilename(filetypes=self.CSV_FILETYPES)
         self.load_csv(csv)
 
     def load_csv(self, csv: str):
