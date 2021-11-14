@@ -8,4 +8,4 @@ class PlotType(Enum):
     KDE_UNIVARIATE = auto()
     KDE_BIVARIATE = auto()
     LINEAR_REGRESSION = auto()
-    QUADRATIC_REGRESSION = auto()
+    POLYNOMIAL_REGRESSION = auto()

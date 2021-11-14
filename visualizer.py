@@ -1,6 +1,7 @@
-from tkinter import Tk, NSEW
+from json import JSONDecodeError
+from tkinter import Tk, NSEW, Menu
 from tkinter import filedialog as fd
-from tkinter.messagebox import showerror
+from tkinter.messagebox import showerror, showinfo
 from tkinter.ttk import Button
 from typing import Optional
 
@@ -12,9 +13,11 @@ from ttkthemes import ThemedStyle
 
 from fancybox import Fancybox
 from plot_types import PlotType
+from settings import Settings
 
 
 class Visualizer(Tk):
+    TITLE = "Visualizer"
     CSV_FILETYPES = [
         ("Comma-separated values", "*.csv"),
         ("Tab-separated values", "*.tsv"),
@@ -24,12 +27,11 @@ class Visualizer(Tk):
     def __init__(self, csv: str):
         super().__init__()
         self.csv = csv
-        self.title = "Visualizer"
-        self.wm_title("Visualizer")
+        self.settings = None
+        self.load_settings()
+        self.wm_title(self.TITLE)
         self.style = ThemedStyle(theme="breeze")
         self.df: Optional[pd.DataFrame] = None
-        self.open_button = Button(self, text="Open", command=self.choose_csv)
-        self.save_button = Button(self, text="Save", command=self.save)
         self.x_axis = Fancybox(self)
         self.y_axis = Fancybox(self)
         self.classes = Fancybox(self)
@@ -59,22 +61,38 @@ class Visualizer(Tk):
         )
         self.quadratic_regression_button = Button(
             self,
-            text="Quadratic regression plot",
-            command=lambda: self.plot(plot_type=PlotType.QUADRATIC_REGRESSION),
+            text="Polynomial regression plot",
+            command=lambda: self.plot(plot_type=PlotType.POLYNOMIAL_REGRESSION),
         )
         self.canvas = FigureCanvasTkAgg(Figure(), self)
         self.load_csv(csv)
 
+    def load_settings(self, path="settings.json", show_confirmation=False):
+        if not path:
+            path = fd.askopenfilename()
+        if not path:
+            return
+        if not self.settings:
+            self.settings = Settings()
+        try:
+            self.settings.reload(path)
+        except JSONDecodeError:
+            showerror("Error", "Invalid settings file: " + path)
+            return
+        if show_confirmation:
+            showinfo("Visualizer", "Settings loaded")
+
     def set_bindings(self):
         self.bind("<Control-o>", lambda event: self.choose_csv())
         self.bind("<Control-s>", lambda event: self.save())
+        self.bind("<Control-S>", lambda event: self.edit_settings())
         self.bind("<Alt-s>", lambda event: self.plot(PlotType.SCATTER))
         self.bind("<Alt-l>", lambda event: self.plot(PlotType.LINE))
         self.bind("<Alt-h>", lambda event: self.plot(PlotType.HISTOGRAM))
         self.bind("<Alt-u>", lambda event: self.plot(PlotType.KDE_UNIVARIATE))
         self.bind("<Alt-b>", lambda event: self.plot(PlotType.KDE_BIVARIATE))
         self.bind("<Alt-l>", lambda event: self.plot(PlotType.LINEAR_REGRESSION))
-        self.bind("<Alt-q>", lambda event: self.plot(PlotType.QUADRATIC_REGRESSION))
+        self.bind("<Alt-p>", lambda event: self.plot(PlotType.POLYNOMIAL_REGRESSION))
         self.bind("<Alt-x>", lambda event: self.x_axis.focus_set())
         self.bind("<Alt-y>", lambda event: self.y_axis.focus_set())
         self.bind("<Alt-c>", lambda event: self.classes.focus_set())
@@ -84,24 +102,47 @@ class Visualizer(Tk):
         self.draw()
         self.mainloop()
 
+    def create_menu_bar(self):
+        menu = Menu(self)
+        file_menu = Menu(menu, tearoff=0)
+        settings_menu = Menu(menu, tearoff=0)
+
+        file_menu.add_command(label="Open", command=self.choose_csv)
+        file_menu.add_command(label="Save as...", command=self.save)
+        file_menu.add_separator()
+        file_menu.add_command(label="Exit", command=self.quit)
+
+        settings_menu.add_command(label="Save", command=self.save_settings)
+        settings_menu.add_command(label="Load", command=lambda: self.load_settings(None, True))
+        settings_menu.add_command(label="Reset defaults", command=self.settings.define_defaults)
+
+        menu.add_cascade(label="File", menu=file_menu)
+        menu.add_cascade(label="Settings", menu=settings_menu)
+
+        self.config(menu=menu)
+
+    def save_settings(self):
+        path = fd.asksaveasfilename(initialfile="settings.json")
+        self.settings.save(path)
+        showinfo(self.TITLE, "Settings saved")
+
     def draw(self):
-        self.columnconfigure(index=(2, 3, 4), weight=1)
+        self.create_menu_bar()
+        self.columnconfigure(index=(0, 1, 2), weight=1)
         self.rowconfigure(index=(1,), weight=1)
-        self.open_button.grid(row=0, column=0, padx=5, pady=5)
-        self.save_button.grid(row=0, column=1, padx=5, pady=5)
-        self.x_axis.grid(row=0, column=2, padx=5, pady=5, sticky=NSEW)
-        self.y_axis.grid(row=0, column=3, padx=5, pady=5, sticky=NSEW)
-        self.classes.grid(row=0, column=4, padx=5, pady=5, sticky=NSEW)
-        self.scatter_plot_button.grid(row=0, column=5, padx=5, pady=5)
-        self.line_plot_button.grid(row=0, column=6, padx=5, pady=5)
-        self.histogram_button.grid(row=0, column=7, padx=5, pady=5)
-        self.univariate_kde_button.grid(row=0, column=8, padx=5, pady=5)
-        self.bivariate_kde_button.grid(row=0, column=9, padx=5, pady=5)
-        self.linear_regression_button.grid(row=0, column=10, padx=5, pady=5)
-        self.quadratic_regression_button.grid(row=0, column=11, padx=5, pady=5)
+        self.x_axis.grid(row=0, column=0, padx=5, pady=5, sticky=NSEW)
+        self.y_axis.grid(row=0, column=1, padx=5, pady=5, sticky=NSEW)
+        self.classes.grid(row=0, column=2, padx=5, pady=5, sticky=NSEW)
+        self.scatter_plot_button.grid(row=0, column=3, padx=5, pady=5)
+        self.line_plot_button.grid(row=0, column=4, padx=5, pady=5)
+        self.histogram_button.grid(row=0, column=5, padx=5, pady=5)
+        self.univariate_kde_button.grid(row=0, column=6, padx=5, pady=5)
+        self.bivariate_kde_button.grid(row=0, column=7, padx=5, pady=5)
+        self.linear_regression_button.grid(row=0, column=8, padx=5, pady=5)
+        self.quadratic_regression_button.grid(row=0, column=9, padx=5, pady=5)
         self.canvas.figure.add_subplot(111)
         self.canvas.draw()
-        self.canvas.get_tk_widget().grid(row=1, column=0, columnspan=12, sticky=NSEW)
+        self.canvas.get_tk_widget().grid(row=1, column=0, columnspan=10, sticky=NSEW)
 
     def plot(self, plot_type=PlotType.SCATTER):
         x_label = self.x_axis.get()
@@ -133,10 +174,17 @@ class Visualizer(Tk):
         elif plot_type == PlotType.SCATTER:
             sns.scatterplot(x=x_label, y=y_label, data=self.df, hue=classes, ax=plot)
         elif plot_type == PlotType.HISTOGRAM:
-            sns.histplot(self.df, x=x_label, hue=classes, ax=plot)
+            sns.histplot(
+                self.df, x=x_label, hue=classes, ax=plot, bins=self.settings["bins"]
+            )
         elif plot_type == PlotType.KDE_UNIVARIATE:
             sns.kdeplot(
-                x=x_label, data=self.df, hue=classes, common_norm=False, ax=plot
+                x=x_label,
+                data=self.df,
+                hue=classes,
+                common_norm=False,
+                ax=plot,
+                bw_adjust=self.settings["band-width factor"],
             )
         elif plot_type == PlotType.KDE_BIVARIATE:
             sns.kdeplot(
@@ -161,7 +209,7 @@ class Visualizer(Tk):
                     plot.legend(title=classes)
             else:
                 sns.regplot(x=x_label, y=y_label, data=self.df, ax=plot)
-        elif plot_type == PlotType.QUADRATIC_REGRESSION:
+        elif plot_type == PlotType.POLYNOMIAL_REGRESSION:
             if classes:
                 for column_value in self.df[classes].unique():
                     sns.regplot(
@@ -170,11 +218,18 @@ class Visualizer(Tk):
                         data=self.df[self.df[classes] == column_value],
                         ax=plot,
                         label=column_value,
-                        order=2,
+                        order=self.settings["polynomial degree"],
                     )
                     plot.legend(title=classes)
             else:
-                sns.regplot(x=x_label, y=y_label, data=self.df, ax=plot, order=2)
+                sns.regplot(
+                    x=x_label,
+                    y=y_label,
+                    data=self.df,
+                    ax=plot,
+                    order=2,
+                    ci=self.settings["confidence interval"],
+                )
 
         plot.set_title(self.csv)
         self.canvas.draw()
