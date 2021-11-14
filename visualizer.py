@@ -23,6 +23,7 @@ class Visualizer(Tk):
 
     def __init__(self, csv: str):
         super().__init__()
+        self.csv = csv
         self.title = "Visualizer"
         self.wm_title("Visualizer")
         self.style = ThemedStyle(theme="breeze")
@@ -107,13 +108,17 @@ class Visualizer(Tk):
         if not x_label:
             showerror("Error", "You need to select an x-axis")
             return
-        y_label = self.y_axis.get()
-        if not y_label and plot_type not in [
-            PlotType.HISTOGRAM,
-            PlotType.KDE_UNIVARIATE,
-        ]:
-            showerror("Error", "You need to select an y-axis")
+        if x_label not in self.df.columns:
+            showerror("Error", "Invalid x column")
             return
+        y_label = self.y_axis.get()
+        if plot_type not in [PlotType.HISTOGRAM, PlotType.KDE_UNIVARIATE]:
+            if not y_label:
+                showerror("Error", "You need to select an y-axis")
+                return
+            if y_label not in self.df.columns:
+                showerror("Error", "Invalid y column")
+                return
         if x_label == y_label and plot_type == PlotType.KDE_BIVARIATE:
             showerror("Error", "Bivariate KDE cannot be run with x=y")
             return
@@ -171,6 +176,7 @@ class Visualizer(Tk):
             else:
                 sns.regplot(x=x_label, y=y_label, data=self.df, ax=plot, order=2)
 
+        plot.set_title(self.csv)
         self.canvas.draw()
 
     def save(self):
@@ -202,6 +208,7 @@ class Visualizer(Tk):
         else:
             showerror("Error", "Invalid file extension")
             return
+        self.csv = csv
 
         headers = list(self.df.columns.values)
         self.x_axis["values"] = self.y_axis["values"] = self.classes["values"] = headers
