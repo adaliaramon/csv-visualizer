@@ -9,6 +9,9 @@ class Fancybox(Combobox):
 
     def select(self, delta: int):
         values = self["values"]
-        index = values.index(self.get())
-        new_index = (index + delta) % len(values)
+        current_value = self.get()
+        new_index = delta
+        if current_value in values:
+            index = values.index(current_value)
+            new_index = (index + delta) % len(values)
         self.set(values[new_index])
