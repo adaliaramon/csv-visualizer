@@ -7,6 +7,7 @@ class Settings(dict):
     COMMON_NORMALIZATION = "Common normalization (Histogram & KDE)"
     CONFIDENCE_INTERVAL = "Confidence interval (Regression)"
     POLYNOMIAL_DEGREE = "Polynomial degree"
+    NUMERIC_HUE = "Numeric hue"
 
     def __init__(self):
         super().__init__()
@@ -18,6 +19,7 @@ class Settings(dict):
         self[self.COMMON_NORMALIZATION] = False
         self[self.CONFIDENCE_INTERVAL] = 95
         self[self.POLYNOMIAL_DEGREE] = 2
+        self[self.NUMERIC_HUE] = False
 
     def reload(self, path="settings.json"):
         try:

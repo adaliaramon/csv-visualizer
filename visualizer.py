@@ -195,10 +195,11 @@ class Visualizer(Tk):
         plot = self.canvas.figure.get_axes()[0]
         plot.cla()  # Clear axis
 
+        palette = "tab10" if not self.settings_panel.get(Settings.NUMERIC_HUE) else None
         if plot_type == PlotType.LINE:
-            sns.lineplot(x=x_label, y=y_label, data=self.df, hue=classes, ax=plot)
+            sns.lineplot(x=x_label, y=y_label, data=self.df, hue=classes, ax=plot, palette=palette)
         elif plot_type == PlotType.SCATTER:
-            sns.scatterplot(x=x_label, y=y_label, data=self.df, hue=classes, ax=plot)
+            sns.scatterplot(x=x_label, y=y_label, data=self.df, hue=classes, ax=plot, palette=palette)
         elif plot_type == PlotType.HISTOGRAM:
             sns.histplot(
                 self.df,
@@ -206,6 +207,7 @@ class Visualizer(Tk):
                 hue=classes,
                 ax=plot,
                 bins=self.settings_panel.get(Settings.BINS),
+                palette=palette,
             )
         elif plot_type == PlotType.KDE_UNIVARIATE:
             bw_adjust = self.settings_panel.get(Settings.BW_FACTOR)
@@ -218,6 +220,7 @@ class Visualizer(Tk):
                 common_norm=self.settings_panel.get(Settings.COMMON_NORMALIZATION),
                 ax=plot,
                 bw_adjust=bw_adjust,
+                palette=palette,
             )
         elif plot_type == PlotType.KDE_BIVARIATE:
             sns.kdeplot(
@@ -229,6 +232,7 @@ class Visualizer(Tk):
                 common_norm=self.settings_panel.get(Settings.COMMON_NORMALIZATION),
                 fill=True,
                 bw_adjust=self.settings_panel.get(Settings.BW_FACTOR),
+                palette=palette,
             )
         elif plot_type == PlotType.LINEAR_REGRESSION:
             if classes:
