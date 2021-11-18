@@ -3,7 +3,7 @@ from numbers import Number
 from tkinter import Tk, NSEW, Menu
 from tkinter import filedialog as fd
 from tkinter.messagebox import showerror, showinfo
-from tkinter.ttk import Button
+from tkinter.ttk import Button, Frame
 from typing import Optional
 
 import pandas as pd
@@ -35,38 +35,10 @@ class Visualizer(Tk):
         self.wm_title(self.TITLE)
         self.style = ThemedStyle(theme="breeze")
         self.df: Optional[pd.DataFrame] = None
-        self.x_axis = Fancybox(self)
-        self.y_axis = Fancybox(self)
-        self.classes = Fancybox(self)
-        self.scatter_plot_button = Button(self, text="Scatter plot (Alt+S)", command=self.try_to_plot)
-        self.line_plot_button = Button(
-            self, text="Line plot", command=lambda: self.try_to_plot(plot_type=PlotType.LINE)
-        )
-        self.histogram_button = Button(
-            self,
-            text="Histogram (Alt+H)",
-            command=lambda: self.try_to_plot(plot_type=PlotType.HISTOGRAM),
-        )
-        self.univariate_kde_button = Button(
-            self,
-            text="Univariate KDE (Alt+U)",
-            command=lambda: self.try_to_plot(plot_type=PlotType.KDE_UNIVARIATE),
-        )
-        self.bivariate_kde_button = Button(
-            self,
-            text="Bivariate KDE (Alt+B)",
-            command=lambda: self.try_to_plot(plot_type=PlotType.KDE_BIVARIATE),
-        )
-        self.linear_regression_button = Button(
-            self,
-            text="Linear regression plot (Alt+L)",
-            command=lambda: self.try_to_plot(plot_type=PlotType.LINEAR_REGRESSION),
-        )
-        self.quadratic_regression_button = Button(
-            self,
-            text="Polynomial regression plot (Alt+P)",
-            command=lambda: self.try_to_plot(plot_type=PlotType.POLYNOMIAL_REGRESSION),
-        )
+        self.top_panel = Frame(self)
+        self.x_axis = Fancybox(self.top_panel)
+        self.y_axis = Fancybox(self.top_panel)
+        self.classes = Fancybox(self.top_panel)
         self.canvas = FigureCanvasTkAgg(Figure(), self)
         self.load_csv(csv)
 
@@ -144,24 +116,60 @@ class Visualizer(Tk):
 
     def draw(self):
         self.create_menu_bar()
-        self.columnconfigure(index=(0, 1, 2), weight=1)
+        self.columnconfigure(index=(1, 2), weight=1)
+        self.top_panel.columnconfigure(index=(0, 1, 2), weight=1)
         self.rowconfigure(index=(1,), weight=1)
-        self.x_axis.grid(row=0, column=0, padx=5, pady=5, sticky=NSEW)
-        self.y_axis.grid(row=0, column=1, padx=5, pady=5, sticky=NSEW)
-        self.classes.grid(row=0, column=2, padx=5, pady=5, sticky=NSEW)
-        self.scatter_plot_button.grid(row=0, column=3, padx=5, pady=5)
-        self.line_plot_button.grid(row=0, column=4, padx=5, pady=5)
-        self.histogram_button.grid(row=0, column=5, padx=5, pady=5)
-        self.univariate_kde_button.grid(row=0, column=6, padx=5, pady=5)
-        self.bivariate_kde_button.grid(row=0, column=7, padx=5, pady=5)
-        self.linear_regression_button.grid(row=0, column=8, padx=5, pady=5)
-        self.quadratic_regression_button.grid(row=0, column=9, padx=5, pady=5)
+        self.draw_top_panel()
         self.canvas.figure.add_subplot(111)
         self.canvas.draw()
         self.settings_panel.grid(row=1, column=0, padx=5, pady=5, sticky=NSEW)
         self.canvas.get_tk_widget().grid(
             row=1, column=1, columnspan=9, padx=5, pady=5, sticky=NSEW
         )
+
+    def draw_top_panel(self):
+        scatter_plot_button = Button(self.top_panel, text="Scatter plot (Alt+S)", command=self.try_to_plot)
+        line_plot_button = Button(
+            self.top_panel, text="Line plot", command=lambda: self.try_to_plot(plot_type=PlotType.LINE)
+        )
+        histogram_button = Button(
+            self.top_panel,
+            text="Histogram (Alt+H)",
+            command=lambda: self.try_to_plot(plot_type=PlotType.HISTOGRAM),
+        )
+        univariate_kde_button = Button(
+            self.top_panel,
+            text="Univariate KDE (Alt+U)",
+            command=lambda: self.try_to_plot(plot_type=PlotType.KDE_UNIVARIATE),
+        )
+        bivariate_kde_button = Button(
+            self.top_panel,
+            text="Bivariate KDE (Alt+B)",
+            command=lambda: self.try_to_plot(plot_type=PlotType.KDE_BIVARIATE),
+        )
+        linear_regression_button = Button(
+            self.top_panel,
+            text="Linear regression plot (Alt+L)",
+            command=lambda: self.try_to_plot(plot_type=PlotType.LINEAR_REGRESSION),
+        )
+        quadratic_regression_button = Button(
+            self.top_panel,
+            text="Polynomial regression plot (Alt+P)",
+            command=lambda: self.try_to_plot(plot_type=PlotType.POLYNOMIAL_REGRESSION),
+        )
+
+        self.x_axis.grid(row=0, column=0, padx=5, pady=5, sticky=NSEW)
+        self.y_axis.grid(row=0, column=1, padx=5, pady=5, sticky=NSEW)
+        self.classes.grid(row=0, column=2, padx=5, pady=5, sticky=NSEW)
+        scatter_plot_button.grid(row=0, column=3, padx=5, pady=5)
+        line_plot_button.grid(row=0, column=4, padx=5, pady=5)
+        histogram_button.grid(row=0, column=5, padx=5, pady=5)
+        univariate_kde_button.grid(row=0, column=6, padx=5, pady=5)
+        bivariate_kde_button.grid(row=0, column=7, padx=5, pady=5)
+        linear_regression_button.grid(row=0, column=8, padx=5, pady=5)
+        quadratic_regression_button.grid(row=0, column=9, padx=5, pady=5)
+
+        self.top_panel.grid(row=0, column=0, columnspan=2)
 
     def try_to_plot(self, plot_type=PlotType.SCATTER):
         try:
