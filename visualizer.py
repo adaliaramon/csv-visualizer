@@ -70,7 +70,9 @@ class Visualizer(Tk):
         self.bind("<Alt-u>", lambda event: self.try_to_plot(PlotType.KDE_UNIVARIATE))
         self.bind("<Alt-b>", lambda event: self.try_to_plot(PlotType.KDE_BIVARIATE))
         self.bind("<Alt-l>", lambda event: self.try_to_plot(PlotType.LINEAR_REGRESSION))
-        self.bind("<Alt-p>", lambda event: self.try_to_plot(PlotType.POLYNOMIAL_REGRESSION))
+        self.bind(
+            "<Alt-p>", lambda event: self.try_to_plot(PlotType.POLYNOMIAL_REGRESSION)
+        )
         self.bind("<Alt-x>", lambda event: self.x_axis.focus_set())
         self.bind("<Alt-y>", lambda event: self.y_axis.focus_set())
         self.bind("<Alt-c>", lambda event: self.classes.focus_set())
@@ -94,9 +96,7 @@ class Visualizer(Tk):
         settings_menu.add_command(
             label="Load", command=lambda: self.load_settings(None, True)
         )
-        settings_menu.add_command(
-            label="Reset defaults", command=self.reset_settings
-        )
+        settings_menu.add_command(label="Reset defaults", command=self.reset_settings)
 
         menu.add_cascade(label="File", menu=file_menu)
         menu.add_cascade(label="Settings", menu=settings_menu)
@@ -116,21 +116,22 @@ class Visualizer(Tk):
 
     def draw(self):
         self.create_menu_bar()
-        self.columnconfigure(index=(1, 2), weight=1)
-        self.top_panel.columnconfigure(index=(0, 1, 2), weight=1)
+        self.columnconfigure(index=(1,), weight=1)
         self.rowconfigure(index=(1,), weight=1)
         self.draw_top_panel()
         self.canvas.figure.add_subplot(111)
         self.canvas.draw()
         self.settings_panel.grid(row=1, column=0, padx=5, pady=5, sticky=NSEW)
-        self.canvas.get_tk_widget().grid(
-            row=1, column=1, columnspan=9, padx=5, pady=5, sticky=NSEW
-        )
+        self.canvas.get_tk_widget().grid(row=1, column=1, padx=5, pady=5, sticky=NSEW)
 
     def draw_top_panel(self):
-        scatter_plot_button = Button(self.top_panel, text="Scatter plot (Alt+S)", command=self.try_to_plot)
+        scatter_plot_button = Button(
+            self.top_panel, text="Scatter plot (Alt+S)", command=self.try_to_plot
+        )
         line_plot_button = Button(
-            self.top_panel, text="Line plot", command=lambda: self.try_to_plot(plot_type=PlotType.LINE)
+            self.top_panel,
+            text="Line plot",
+            command=lambda: self.try_to_plot(plot_type=PlotType.LINE),
         )
         histogram_button = Button(
             self.top_panel,
@@ -169,7 +170,8 @@ class Visualizer(Tk):
         linear_regression_button.grid(row=0, column=8, padx=5, pady=5)
         quadratic_regression_button.grid(row=0, column=9, padx=5, pady=5)
 
-        self.top_panel.grid(row=0, column=0, columnspan=2)
+        self.top_panel.columnconfigure(index=(0, 1, 2), weight=1)
+        self.top_panel.grid(row=0, column=0, columnspan=3, sticky=NSEW)
 
     def try_to_plot(self, plot_type=PlotType.SCATTER):
         try:
@@ -205,9 +207,23 @@ class Visualizer(Tk):
 
         palette = "tab10" if not self.settings_panel.get(Settings.NUMERIC_HUE) else None
         if plot_type == PlotType.LINE:
-            sns.lineplot(x=x_label, y=y_label, data=self.df, hue=classes, ax=plot, palette=palette)
+            sns.lineplot(
+                x=x_label,
+                y=y_label,
+                data=self.df,
+                hue=classes,
+                ax=plot,
+                palette=palette,
+            )
         elif plot_type == PlotType.SCATTER:
-            sns.scatterplot(x=x_label, y=y_label, data=self.df, hue=classes, ax=plot, palette=palette)
+            sns.scatterplot(
+                x=x_label,
+                y=y_label,
+                data=self.df,
+                hue=classes,
+                ax=plot,
+                palette=palette,
+            )
         elif plot_type == PlotType.HISTOGRAM:
             sns.histplot(
                 self.df,
