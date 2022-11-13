@@ -23,7 +23,7 @@ class Settings(dict):
 
     def reload(self, path="settings.json"):
         try:
-            with open(path, "r") as f:
+            with open(path) as f:
                 data: dict = json.load(f)
                 for key, value in data.items():
                     if key in self:

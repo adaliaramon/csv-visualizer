@@ -1,6 +1,12 @@
-from tkinter import LEFT, Text, END, W, E
-from tkinter.ttk import Label, Frame
-from typing import Optional, Dict
+from tkinter import E
+from tkinter import END
+from tkinter import LEFT
+from tkinter import Text
+from tkinter import W
+from tkinter.ttk import Frame
+from tkinter.ttk import Label
+from typing import Dict
+from typing import Optional
 
 from settings import Settings
 

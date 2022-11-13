@@ -1,9 +1,13 @@
 from json import JSONDecodeError
 from numbers import Number
-from tkinter import Tk, NSEW, Menu
 from tkinter import filedialog as fd
-from tkinter.messagebox import showerror, showinfo
-from tkinter.ttk import Button, Frame
+from tkinter import Menu
+from tkinter import NSEW
+from tkinter import Tk
+from tkinter.messagebox import showerror
+from tkinter.messagebox import showinfo
+from tkinter.ttk import Button
+from tkinter.ttk import Frame
 from typing import Optional
 
 import pandas as pd
